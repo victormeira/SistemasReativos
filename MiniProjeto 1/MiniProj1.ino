@@ -1,6 +1,6 @@
 #include "pindefs.h"
 
-#define ONE_MINUTE 6000
+#define ONE_MINUTE 60000
 
 unsigned long last_clock_update = 0;
 int clock_time = 1200;
@@ -75,6 +75,10 @@ void setup(void){
   	pinMode(CLK,OUTPUT);
   	pinMode(DATA,OUTPUT);
   	Serial.begin(9600);
+  	digitalWrite(LED1, HIGH);
+  	digitalWrite(LED2, HIGH);
+  	digitalWrite(LED3, HIGH);
+  	digitalWrite(LED4, HIGH);
 
   	WriteNumberInDisplay(1200);
 }
@@ -112,8 +116,29 @@ void loop(void){
 			/* Button 2 was released */
 			if(but2_state == 0)
 				alarm_time = AddMinToTime(alarm_time);
-		}	
+		}
 
+		/* released button 2 while no other button was pressed */
+		if(but3_state == 0 && but1_state == 0 && but2_state == 0){
+			/* Turn alarm from off to on */
+			if(alarm_mode == 0){
+				alarm_mode = 1;
+				digitalWrite(LED1,LOW);
+			}
+			else{
+				/* Turn alarm from on to off */
+				if(alarm_mode == 1){
+					alarm_mode = 0;
+					digitalWrite(LED1,HIGH);
+				}
+				else{
+					/* Stop alarm from playing */
+					if(alarm_mode == 2)
+						alarm_mode = 3;
+				}
+			}	
+
+		}
 	}
 
 	/* button 3 state changed*/
@@ -125,26 +150,6 @@ void loop(void){
 			/* button 3 was released while button 1 is pressed */
 			if(but3_state == 0 && but1_state == 1){
 				clock_time = AddMinToTime(clock_time);
-			}
-			/* button 3 released while no other button is pressed */
-			else{
-				/* Turn alarm from off to on */
-				if(alarm_mode == 0){
-					alarm_mode = 1;
-					digitalWrite(LED1,LOW);
-				}
-				else{
-					/* Turn alarm from on to off */
-					if(alarm_mode == 1){
-						alarm_mode = 0;
-						digitalWrite(LED1,HIGH);
-					}
-					else{
-						/* Stop alarm from playing */
-						if(alarm_mode == 2)
-							alarm_mode = 3;
-					}
-				}
 			}
 		}
 	}
@@ -162,16 +167,16 @@ void loop(void){
 
 
 	/* one minute has elapsed since last update */
-	if(timer_now - last_clock_update > 100){
+	if(timer_now - last_clock_update > ONE_MINUTE){
 		clock_time = AddMinToTime(clock_time);
 		last_clock_update = timer_now;
 	}
 
 	/* what time to be displayed*/
 	if(time_to_be_displayed == 0)
-		displayed_time = clock_time
+		displayed_time = clock_time;
 	else
-		displayed_time = alarm_time
+		displayed_time = alarm_time;
 
 	/* Alarm is on and the time has arrived*/
 	if(clock_time == alarm_time && alarm_mode == 1)
@@ -183,9 +188,7 @@ void loop(void){
 
 	/* Alarm is playing */
 	if(alarm_mode == 2){
-		digitalWrite(LED4,LOW);
-		delay(20);
-		digitalWrite(LED4,HIGH);
+		digitalWrite(LED2, LOW);
 	}
 
 	WriteNumberInDisplay(displayed_time);
