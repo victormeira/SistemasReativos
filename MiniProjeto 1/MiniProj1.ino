@@ -1,3 +1,7 @@
+/* 
+Grupo:
+Victor Meira Pinto - 1420626 */
+
 #include "pindefs.h"
 
 #define ONE_MINUTE 60000
