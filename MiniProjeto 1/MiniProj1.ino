@@ -1,14 +1,21 @@
 #include "pindefs.h"
 
 #define ONE_MINUTE 60000
+#define BEEP_INTERVAL 500
+#define HELD_INTERVAL 1000
 
 unsigned long last_clock_update = 0;
 int clock_time = 1200;
 int alarm_time = 1159;
+int snooze_time = 1159;
+unsigned long last_beep_toggle = 0;
+bool beep_state = 0;
+unsigned long but_pressed_time = 0;
+bool but_being_pressed = 0;
 
 /* Declares what mode the alarm is, 0 is off, 1 is on and waiting, 
-2 is on and playing, 3 is on and turned by user*/
-short alarm_mode = 0;
+2 is on and playing, 3 is on and turned by user */
+int alarm_mode = 0;
 
 bool but1_prev_state = 0, but2_prev_state = 0, but3_prev_state = 0;
 unsigned long but1_prev_press = 0, but2_prev_press = 0, but3_prev_press = 0;
@@ -36,12 +43,24 @@ void WriteDigit(byte position, byte value){
   	digitalWrite(LATCH,HIGH);
 }
 
-int AddMinToTime(int time){
+int AddMinToRealTime(int time){
 	int minute = time%100;
 	int hour = time/100;
 
 	if(minute == 59)
 		return AddHrToTime(time - 59);
+	else
+		minute = minute + 1;
+
+	return ConvertMinHrToTime(hour,minute);
+}
+
+int AddMinToTime(int time){
+	int minute = time%100;
+	int hour = time/100;
+
+	if(minute == 59)
+		minute = 0;
 	else
 		minute = minute + 1;
 
@@ -69,6 +88,9 @@ void setup(void){
   	pinMode(KEY2, INPUT_PULLUP);
   	pinMode(KEY3, INPUT_PULLUP);
   	pinMode(LED1, OUTPUT);
+	pinMode(LED2, OUTPUT);
+	pinMode(LED3, OUTPUT);
+	pinMode(LED4, OUTPUT);
   	pinMode(BUZZER, OUTPUT);
   	digitalWrite(BUZZER, HIGH);
   	pinMode(LATCH,OUTPUT);
@@ -84,7 +106,7 @@ void setup(void){
 }
 
 void loop(void){
-	unsigned timer_now = millis();
+	unsigned long timer_now = millis();
 
 	/* current state of the buttons, 1 pressed, 0 not pressed */
 	bool but1_state = !digitalRead(KEY1);
@@ -99,6 +121,23 @@ void loop(void){
 	if(time_to_be_displayed && !but3_state)
 		time_to_be_displayed = 0;
 
+	/* button 1 state changed */
+	if(but1_state != but1_prev_state){
+		but1_prev_state = but1_state;
+
+		/* When showing the alarm */
+		if(time_to_be_displayed){
+			if(but1_state == 0)
+				alarm_time = AddHrToTime(alarm_time);
+		}
+		/*When alarm is sounding */
+		if(alarm_mode == 2){
+			snooze_time = alarm_time;
+			alarm_time = AddMinToRealTime(alarm_time);
+			alarm_time = AddMinToRealTime(alarm_time);
+			alarm_mode = 1;
+		}
+	}
 
 	/* button 2 state changed*/
 	if(but2_state != but2_prev_state){
@@ -123,21 +162,19 @@ void loop(void){
 			/* Turn alarm from off to on */
 			if(alarm_mode == 0){
 				alarm_mode = 1;
-				digitalWrite(LED1,LOW);
 			}
 			else{
 				/* Turn alarm from on to off */
 				if(alarm_mode == 1){
 					alarm_mode = 0;
-					digitalWrite(LED1,HIGH);
 				}
 				else{
 					/* Stop alarm from playing */
-					if(alarm_mode == 2)
+					if(alarm_mode == 2){
 						alarm_mode = 3;
+					}
 				}
 			}	
-
 		}
 	}
 
@@ -154,21 +191,9 @@ void loop(void){
 		}
 	}
 
-	/* button 1 state changed */
-	if(but1_state != but1_prev_state){
-		but1_prev_state = but1_state;
-
-		/* When showing the alarm */
-		if(time_to_be_displayed){
-			if(but1_state == 0)
-				alarm_time = AddHrToTime(alarm_time);
-		}
-	}
-
-
 	/* one minute has elapsed since last update */
 	if(timer_now - last_clock_update > ONE_MINUTE){
-		clock_time = AddMinToTime(clock_time);
+		clock_time = AddMinToRealTime(clock_time);
 		last_clock_update = timer_now;
 	}
 
@@ -179,17 +204,36 @@ void loop(void){
 		displayed_time = alarm_time;
 
 	/* Alarm is on and the time has arrived*/
-	if(clock_time == alarm_time && alarm_mode == 1)
+	if(clock_time == alarm_time && alarm_mode == 1){
 		alarm_mode = 2;
+	}
 	
 	/* Resets alarm that has stopped playing */
-	if(clock_time != alarm_time && alarm_mode == 3)
+	if(clock_time != alarm_time && alarm_mode == 3){
 		alarm_mode = 1;
+		alarm_time = snooze_time;
+	}
+
+	/* Alarm is on */
+	if(alarm_mode == 1)
+		digitalWrite(LED1, LOW);
+	else
+		digitalWrite(LED1,HIGH);
 
 	/* Alarm is playing */
 	if(alarm_mode == 2){
-		digitalWrite(LED2, LOW);
+		if(timer_now - last_beep_toggle > BEEP_INTERVAL){
+			if(beep_state == 0)
+				digitalWrite(BUZZER, LOW);
+			else
+				digitalWrite(BUZZER, HIGH);
+			
+			beep_state = !beep_state;
+			last_beep_toggle = timer_now;
+		}
 	}
+	else
+		digitalWrite(BUZZER, HIGH);
 
 	WriteNumberInDisplay(displayed_time);
 }

@@ -1,0 +1,17 @@
+Controles do Alarme:
+
+Ligar Alarme: 	Botão do Meio
+
+Mostrar Alarme:	Último Botão
+
+Mudar Horário: 	Hora - Primeiro Botão + Botão do Meio
+				Minuto - Primeiro Botão + Último Botão
+
+Mudar Alarme:	Hora - Último Botão + Primeiro Botão
+				Minuto - Último Botão + Botão do Meio
+
+Modo Soneca:	Primeiro Botão (só ativa quando alarme estiver tocando)
+
+Display do Relógio:
+
+LED1 Ligado: 	Alarme está ligado
