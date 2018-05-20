@@ -42,7 +42,7 @@ end
 
 function love.keypressed(key)
   if key == 'a' then
-    mqtt_client:publish("request_position", "request")
+    mqtt_client:publish("requestData", "requesting")
   end
 end
 
@@ -50,7 +50,7 @@ function love.load()
 
   mqtt_client = mqtt.client.create("test.mosquitto.org", 1883, mqttcb)
   mqtt_client:connect("MiniProjeto-MatheusEVictor")
-  mqtt_client:subscribe({"requests"})
+  mqtt_client:subscribe({"locationData"})
 end
 
 function love.draw()

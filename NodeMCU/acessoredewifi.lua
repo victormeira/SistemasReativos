@@ -6,5 +6,6 @@ wificonf = {
   save = false
 }
 
+print("doing")
 wifi.setmode(wifi.STATION)
 wifi.sta.config(wificonf)
