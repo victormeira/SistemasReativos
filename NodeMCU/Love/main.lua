@@ -42,7 +42,7 @@ end
 
 function love.keypressed(key)
   if key == 'a' then
-    mqtt_client:publish("requestData", "requesting")
+    mqtt_client:publish("requestData", "Requesting location")
   end
 end
 
