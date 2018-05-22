@@ -5,20 +5,16 @@ sw2     = 2
 gpio.mode   (led1, gpio.OUTPUT)
 gpio.mode   (sw1,gpio.INT,gpio.PULLUP)
 gpio.mode   (sw2,gpio.INT,gpio.PULLUP)
-gpio.trig   (sw1, "down", buttonpressed())
 gpio.write  (led1, gpio.LOW)
 gpio.write  (led2, gpio.LOW)
 
-local MQTT  = require("mqttNodeMCULibrary")
-MQTT.start("requestData",mqttcb)
+--local MQTT  = require("mqttNodeMCULibrary")
+--MQTT.start("requests",mqttcb)
 --mqtt_client = mqtt.client.create("test.mosquitto.org", 1883, mqttcb)
 --mqtt_client:connect("MiniProjeto-MatheusEVictor")
 --mqtt_client:subscribe({"requests"})
 
-function mqttcb(message)
-  if(message == "requesting") then
-    wifi.sta.getap(listap)
-  end
+function mqttcb(topic, message)
    --topic te diz a fila que recebeu e message a string
 end
 
@@ -38,7 +34,7 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
         i = i + 1
     end
 
-    json = "[[ { \"wifiAccessPoints\": ["
+    json = "[[{ \"wifiAccessPoints\": ["
     json = json .. table.concat(listdeap,",")
 
     json = json .. "]}]]"
@@ -49,34 +45,16 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
     for k in pairs (listdeap) do
         listdeap [k] = nil
     end
-
-    http.get('https://google.com',nil, function(code, data)
-    if (code < 0) then
-      print("HTTP request failed")
-    else
-      print(code, data)
-    end
-    end)
     
-    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=zaSyB_PcDv6uslYq0Z1EuyiHHUFrPIFU56eCA',
+    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA5Z5xai0SkBDbbjHueWLggvXvV_rLMG5E',
   'Content-Type: application/json\r\n',json,
   function(code, data)
     if (code < 0) then
       print("HTTP request failed :", code)
     else
       print(code, data)
-      
-      --data format: { "location": { "lat": 51.0, "lng": -0.1 }, "accuracy": 1200.4 }
-
-      latStart,latEnd = string.find(data,"lat")
-      lngStart,lngEnd = string.find(data,"lng")
-      accStart,accEnd = string.find(data,"accuracy")
-
-      payload = string.sub(data,latEnd+4,lngStart-4) .. ";" .. string.sub(data,lngEnd+4,accStart-5)
-
-      --MQTT.sendMessage(payload,"locationData")
-
-      print("Location Data sent.")
+      print(type(data))        
+      --publish em uma fila chamada locationdata
     end
   end)   
 end
@@ -99,5 +77,6 @@ function buttonpressed ()
   end
 end
 
+gpio.trig   (sw1, "down", buttonpressed())
 --wifi.sta.getap(listap)
 
