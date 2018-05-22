@@ -46,7 +46,7 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
         listdeap [k] = nil
     end
     
-    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA5Z5xai0SkBDbbjHueWLggvXvV_rLMG5E',
+    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA5Z5xai0SkBDbbjHueWLggvXvV_r', --LMG5E
   'Content-Type: application/json\r\n',json,
   function(code, data)
     if (code < 0) then
