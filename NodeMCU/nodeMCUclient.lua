@@ -10,14 +10,13 @@ gpio.write  (led2, gpio.LOW)
 locationJSON = ""   
 
 
-local m = mqtt.Client("1420626-11", 120)
+local m = mqtt.Client("1420626666", 120)
 
 function publishLocationData()
 	if(string.len(locationJSON) > 0) then
 		print("Publishing Location Data.")
-		client:publish("locationData", "1;2;3",0,  0, 
-                  function(client, reason) print("Published.") end)
-		print("Publish successful.")
+		m:publish("locationData", locationJSON, 0,  0, 
+                  function(client, reason) print("Location Data Published.") end)
 	else
 		print("Publish failed. Data was empty")
 	end 
@@ -27,8 +26,8 @@ end
 function messageReceivedCallback(client)
 
     local function messageTreatment(userdata, topic, message)
-        print("ENTREI")
-            if(message == "A") then
+            if(message == "Requesting location") then
+                print("Received location request.")
                 locationJSON = ""
                 wifi.sta.getap(listap)
             end
@@ -38,8 +37,8 @@ function messageReceivedCallback(client)
 end
 
 function connected(client)
-    --client:publish("connectionSuccess", "NodeMCU has connected.",0,  0, 
-	--		  	  function(client, reason) print("Published.") end)
+    client:publish("connectionSuccess", "NodeMCU has connected.",0,  0, 
+			  	  function(client, reason) print("Connection success.") end)
     client:subscribe("requestData",0,messageReceivedCallback)
 end
 
@@ -60,31 +59,31 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
 	for ssid,v in pairs(t) do
 		local authmode, rssi, bssid, channel = string.match(v, "([^,]+),([^,]+),([^,]+),([^,]+)")
 
-		listdeap[i] = "\n\t\t{ \"macAddress\": \"" .. bssid .. "\"" .. ",\n\t\t  \"signalStrength\": " .. rssi .. ",\n\t\t  \"channel\": " .. channel .. "}"
-
-        if (i == 4) then break end
+		listdeap[i] = [[{ "macAddress":  "]] .. bssid .. [[]] .. [[","signalStrength": ]] .. rssi .. [[,"channel": ]] .. channel .. [[}]]
+        if (i == 6) then break end
 		i = i + 1
 	end
 
-	json = "[[\n{\n\t\"wifiAccessPoints\": ["
-	json = json .. table.concat(listdeap,",")
+    json = [[{"wifiAccessPoints": [ ]]
+    json = json .. table.concat(listdeap,",")
 
-	json = json .. "\n\t]\n}\n]]"
-	
-	print(json)
+    json = json .. [[]}]]
+    
+    print(json)
 	
 	--empty table for next call
 	for k in pairs (listdeap) do
 		listdeap [k] = nil
 	end
 
-    local numberOfTries = 20
+    local numberOfTries = 5
 
     local function callbackPost(code,data)
             if (code < 0) then
                 print("HTTP request failed :", code)
                 numberOfTries = numberOfTries - 1
                 print("Number of remaining tries: " .. numberOfTries)
+                tmr.delay(1000000)
                 if(numberOfTries > 0) then
                    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyDKcCPg4oxcRCVu-sYs97V1VHNYCdVKn_o',
                     'Content-Type: application/json\r\n',json,callbackPost)
@@ -92,7 +91,8 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
             else
                 print(code, data)
                 locationJSON = parseLocationData(data)
-                print(locationJSON)      
+                print(locationJSON)
+                publishLocationData()      
             end
     end
 
@@ -100,7 +100,6 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
       'Content-Type: application/json\r\n',json,callbackPost)
         
     gpio.write  (led1, gpio.LOW)
-    publishLocationData()
 
 end
 
@@ -123,8 +122,6 @@ function buttonpressed ()
 			wifi.sta.getap(listap)
 			
 
-			--publishLocationData()
-
 	end
 end
 gpio.trig   (sw1, "down", buttonpressed())
@@ -135,4 +132,3 @@ m:connect("test.mosquitto.org", 1883, 0,
 			 function(client, reason) print("Connection failed. Reason for failure:"..reason) end)
 
 --wifi.sta.getap(listap)
-

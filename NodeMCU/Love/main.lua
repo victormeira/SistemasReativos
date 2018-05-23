@@ -33,15 +33,15 @@ end
 
 function love.keypressed(key)
   if key == 'a' then
-    latitude = 10
-    mqtt_client:publish("requestData", "A")
+    latitude = 0
+    mqtt_client:publish("requestData", "Requesting location")
   end
 end
 
 function love.load()
   
-  WIDTH = 500
-  HEIGHT = 500
+  WIDTH = 200
+  HEIGHT = 100
   
   love.window.setMode(WIDTH,HEIGHT)
 
@@ -54,11 +54,18 @@ end
 
 function love.draw()
   love.graphics.print("Latitude: ", 10,10)
-  love.graphics.print(latitude, 80,10)
   love.graphics.print("Longitude: ", 10,30)
-  love.graphics.print(longitude, 80,30)
   love.graphics.print("Precisão: ", 10,50)
-  love.graphics.print(precisao, 80,50)
+  
+  if(not (latitude == 0)) then
+    love.graphics.print(latitude, 80,10)
+    love.graphics.print(longitude, 80,30)
+    love.graphics.print(precisao, 80,50)
+  else
+    love.graphics.print("-----", 80,10)
+    love.graphics.print("-----", 80,30)
+    love.graphics.print("-----", 80,50)
+  end
 end
 
 function love.update(dt)
