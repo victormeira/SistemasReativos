@@ -6,6 +6,6 @@ wificonf = {
   save = false
 }
 
-print("doing")
+print("Connecting")
 wifi.setmode(wifi.STATION)
 wifi.sta.config(wificonf)

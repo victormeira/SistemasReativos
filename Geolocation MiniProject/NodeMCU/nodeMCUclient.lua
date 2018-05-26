@@ -10,7 +10,7 @@ gpio.write  (led2, gpio.LOW)
 locationJSON = ""   
 
 
-local m = mqtt.Client("1420626666", 120)
+local m = mqtt.Client("VictorTeste132", 120)
 
 function publishLocationData()
 	if(string.len(locationJSON) > 0) then
@@ -87,6 +87,9 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
                 if(numberOfTries > 0) then
                    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyDKcCPg4oxcRCVu-sYs97V1VHNYCdVKn_o',
                     'Content-Type: application/json\r\n',json,callbackPost)
+                else
+                    m:publish("locationData", "Failure", 0,  0, 
+                  function(client, reason) print("Failure to get location published.") end)
                 end
             else
                 print(code, data)
@@ -96,7 +99,7 @@ function listap(t) -- (SSID : Authmode, RSSI, BSSID, Channel)
             end
     end
 
-    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyDKcCPg4oxcRCVu-sYs97V1VHNYCdVKn_o',
+    http.post('https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA5Z5xai0SkBDbbjHueWLggvXvV_rLMG5E',
       'Content-Type: application/json\r\n',json,callbackPost)
         
     gpio.write  (led1, gpio.LOW)
