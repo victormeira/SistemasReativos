@@ -63,7 +63,7 @@ void read_string(char* str_received)
       else if(str_received[2] == 't')
       {
         char state = digitalRead(led_control1);
-        state = ~state;
+        state = !state;
         digitalWrite(led_control1, state);
       }
     }
@@ -76,7 +76,7 @@ void read_string(char* str_received)
       else if(str_received[2] == 't')
       {
         char state = digitalRead(led_control2);
-        state = ~state;
+        state = !state;
         digitalWrite(led_control2, state);
       }
     }
@@ -89,7 +89,7 @@ void read_string(char* str_received)
       else if(str_received[2] == 't')
       {
         char state = digitalRead(led_control3);
-        state = ~state;
+        state = !state;
         digitalWrite(led_control3, state);
       }
     }
@@ -158,7 +158,7 @@ void requestEvent()
   send_String = "h " + String(hall.sensor_state) + ";o " + String(optic.sensor_state) + ";b " + String(button.sensor_state)
   + ";m " + String(metal.sensor_state) + ";" + String(led1_state) + String(led2_state) + String(led3_state);
 
-  send_String.toCharArray(send_str, 61); 
+  send_String.toCharArray(send_str, 20); 
   
   Wire.write(send_str);       
 }
